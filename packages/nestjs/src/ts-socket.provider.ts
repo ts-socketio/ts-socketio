@@ -26,7 +26,7 @@ export class TsSocketProvider {
         const check = () => {
           const emitter = gatewayEmitterCache.get(gateway);
           if (emitter) {
-            logger.debug(`Cached emitter: ${inspect(emitter)}`);
+            logger.verbose(`Cached emitter: ${inspect(emitter)}`);
             this.resolveEmitter(emitter);
             //add 1ms delay to ensure the emitter is registered
             setTimeout(() => {

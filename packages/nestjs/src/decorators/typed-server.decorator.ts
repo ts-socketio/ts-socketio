@@ -48,7 +48,6 @@ export function TypedServer(contract?: TypedSocketContract): PropertyDecorator {
     // Monkey patch the afterInit method to create the typed emitter
     const originalAfterInit = (target as any).afterInit;
     (target as any).afterInit = function (...args: any[]) {
-      console.log('afterInit', this, propertyKey);
       if (!this[propertyKey]) {
         const io = this._server;
         const contractMeta = contract || Reflect.getMetadata(TYPED_SERVER_CONTRACT_KEY, target.constructor);

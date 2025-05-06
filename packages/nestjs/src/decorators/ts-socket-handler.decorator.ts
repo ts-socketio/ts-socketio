@@ -222,7 +222,6 @@ export function TsSocketHandler<TEventDef extends EventDefinition<any, any>>(
                 throw new Error(`Cannot find Socket.IO Server instance.`);
             }
             
-            logger.debug('gatewayInstance', gatewayInstance);
             if (!gatewayEmitterCache.has(gatewayInstance)) {
                 const emitterPropertyKey = Reflect.getMetadata(TYPED_SERVER_PROPERTY_KEY, gatewayInstance.constructor);
                 if (emitterPropertyKey) {
