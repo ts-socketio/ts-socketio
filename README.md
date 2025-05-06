@@ -128,23 +128,29 @@ httpServer.listen(3000);
 ### 4. NestJS Integration
 
 ```typescript
-// Define a gateway
-import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
-import { Server } from 'socket.io';
 import { 
-  TypedServer, 
-  TsSocketHandler, 
-  tsParseServerEvents,
+  WebSocketGateway, 
+  WebSocketServer, 
+  OnGatewayInit,
+  OnGatewayConnection, 
+  OnGatewayDisconnect,
+  ConnectedSocket,
+  MessageBody
+} from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
+import {
+  TypedServer,
+  TsSocketHandler,
   TsMeta,
-  TsSocketProvider 
+  tsParseServerEvents,
+  TsSocketProvider
 } from '@ts-socketio/nestjs';
 import { chatContract } from './contract';
 
-// Process contract for server-side handling
 const { serverContract } = tsParseServerEvents(chatContract);
 
 @WebSocketGateway()
-export class ChatGateway {
+export class ChatGateway implements OnGatewayInit, OnGatewayConnection {
   @WebSocketServer()
   server: Server;
 
@@ -152,49 +158,25 @@ export class ChatGateway {
   typedServer;
 
   constructor(private readonly tsSocketProvider: TsSocketProvider) {}
-
-  onModuleInit() {
-    // Register this gateway with the provider for service-level access
-    this.tsSocketProvider.registerGateway(this);
+  
+  async afterInit() {
+    // Register this gateway with the provider
+    await this.tsSocketProvider.registerGateway(this);
   }
 
-  // Enhanced decorator automatically handles socket events
+  // Full-featured handler example with all decorator types
   @TsSocketHandler(serverContract.setNickname)
-  async handleSetNickname(ctx, @TsMeta() metadata, @TsMeta('authToken') authToken) {
-    console.log(`User ${ctx.socket.id} set nickname: ${ctx.payload.nickname}`);
-    console.log(`Metadata ID: ${metadata.messageId}, Auth Token: ${authToken}`);
-    
-    // Broadcast with type-safety
-    this.typedServer.userJoined({ 
-      userId: ctx.socket.id, 
-      nickname: ctx.payload.nickname 
-    });
-    
-    // Type-safe response (validated against schema)
+  handleSetNickname(
+    ctx, // Context with payload, socket, io
+    @TsMeta() metadata, // Full metadata object
+    @TsMeta('authToken') token, // Specific metadata field
+    @ConnectedSocket() socket, // NestJS standard decorators still work
+    @MessageBody() rawBody // Access raw message body if needed
+  ) {
+    // Implementation
     return { success: true };
   }
-
-  @TsSocketHandler(serverContract.sendMessage)
-  async handleSendMessage(ctx) {
-    // Context contains payload, metadata, socket, and io
-    const { payload, socket } = ctx;
-    
-    // Broadcast message to all clients
-    this.typedServer.sendMessage({ text: payload.text });
-  }
 }
-
-// Register in module
-import { Module } from '@nestjs/common';
-import { ChatGateway } from './chat.gateway';
-import { TsSocketModule } from '@ts-socketio/nestjs';
-import { ChatService } from './chat.service';
-
-@Module({
-  imports: [TsSocketModule],
-  providers: [ChatGateway, ChatService]
-})
-export class ChatModule {}
 
 // Service-level access to emitters
 import { Injectable } from '@nestjs/common';
@@ -212,7 +194,28 @@ export class ChatService {
     emitter.sendMessage({ text: message, system: true });
   }
 }
+
+// In your module:
+@Module({
+  imports: [],
+  providers: [ChatGateway, ChatService, TsSocketProvider]
+})
+export class AppModule {}
 ```
+## NestJS Decorators and Providers Reference
+
+The `@ts-socketio/nestjs` package provides several decorators and providers to integrate Socket.IO with NestJS in a type-safe manner:
+
+| Name | Type | Description | Usage |
+|------|------|-------------|-------|
+| `@TypedServer()` | Decorator | Creates a typed emitter for server-to-client events based on the contract | `@TypedServer(contract) typedServer: TypedServerEmitter<Contract>;` |
+| `@TsSocketHandler()` | Method Decorator | Registers an event handler with socket.io and handles validation | `@TsSocketHandler(serverContract.eventName) handleEvent(ctx) {}` |
+| `@TsMeta()` | Parameter Decorator | Injects message metadata into handler parameters | `handleEvent(ctx, @TsMeta() metadata, @TsMeta('field') specificField) {}` |
+| `TsSocketProvider` | Injectable Service | Provides access to typed emitters from any service | `constructor(private tsSocketProvider: TsSocketProvider) {}` |
+| `TsSocketProvider.registerGateway()` | Method | Registers a gateway with the provider and waits for emitter to be available | `await tsSocketProvider.registerGateway(gateway, timeout?)` |
+| `TsSocketProvider.getEmitter()` | Method | Gets the typed emitter for use in services | `const emitter = await tsSocketProvider.getEmitter()` |
+| `tsParseServerEvents()` | Function | Processes a contract into server-side handlers | `const { serverContract } = tsParseServerEvents(contract);` |
+
 
 ## Examples
 
