@@ -1,6 +1,6 @@
 {
   "name": "@ts-socketio/nestjs",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "NestJS integration for ts-socketio",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -17,9 +17,9 @@
     "socket.io": "^4.0.0"
   },
   "dependencies": {
-    "@ts-socketio/server": "^0.1.5",
+    "@ts-socketio/server": "^0.1.6",
     "@nestjs/core": ">= 8.0.0",
-    "@ts-socketio/nestjs": "^0.1.5"
+    "@ts-socketio/nestjs": "^0.1.6"
   },
   "license": "MIT",
   "repository": {

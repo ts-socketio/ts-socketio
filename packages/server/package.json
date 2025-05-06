@@ -1,6 +1,6 @@
 {
   "name": "@ts-socketio/server",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -9,9 +9,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@ts-socketio/core": "^0.1.5",
+    "@ts-socketio/core": "^0.1.6",
     "socket.io": "^4.7.5",
-    "@ts-socketio/server": "^0.1.5"
+    "@ts-socketio/server": "^0.1.6"
   },
   "repository": {
     "type": "git",
